@@ -1,56 +1,111 @@
 package dev.mehdi;
 
+import dev.mehdi.piece.Piece;
+import lombok.Getter;
+import lombok.NonNull;
+
+import java.util.HashSet;
+import java.util.Set;
+
 public class Board {
-    private Cell[][] cells = new Cell[8][8];
+    private Piece[][] board = new Piece[8][8];
+    @Getter
+    private Set<Piece> whitePieces = new HashSet<>();
+    @Getter
+    private Set<Piece> blackPieces = new HashSet<>();
 
-    void init() {
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                cells[i][j] = new Cell(null, new Position(i, j));
-            }
+    public Board() {
+        for (int i = 1; i <= 8; i++) {
+            newPiece(Type.PAWN, Color.WHITE, Position.of(2, i));
+            newPiece(Type.PAWN, Color.BLACK, Position.of(7, i));
         }
 
-        for (int i = 0; i < 8; i++) {
-            cells[1][i].piece = new Piece(Color.WHITE, Type.PAWN);
-            cells[6][i].piece = new Piece(Color.BLACK, Type.PAWN);
+        newPiece(Type.ROOK, Color.WHITE, Position.of(1, 1));
+        newPiece(Type.ROOK, Color.WHITE, Position.of(1, 8));
+        newPiece(Type.ROOK, Color.BLACK, Position.of(8, 1));
+        newPiece(Type.ROOK, Color.BLACK, Position.of(8, 8));
+
+        newPiece(Type.KNIGHT, Color.WHITE, Position.of(1, 2));
+        newPiece(Type.KNIGHT, Color.WHITE, Position.of(1, 7));
+        newPiece(Type.KNIGHT, Color.BLACK, Position.of(8, 2));
+        newPiece(Type.KNIGHT, Color.BLACK, Position.of(8, 7));
+
+        newPiece(Type.BISHOP, Color.WHITE, Position.of(1, 3));
+        newPiece(Type.BISHOP, Color.WHITE, Position.of(1, 6));
+        newPiece(Type.BISHOP, Color.BLACK, Position.of(8, 3));
+        newPiece(Type.BISHOP, Color.BLACK, Position.of(8, 6));
+
+        newPiece(Type.QUEEN, Color.WHITE, Position.of(1, 4));
+        newPiece(Type.QUEEN, Color.BLACK, Position.of(8, 4));
+
+        newPiece(Type.KING, Color.WHITE, Position.of(1, 5));
+        newPiece(Type.KING, Color.BLACK, Position.of(8, 5));
+    }
+
+    private void newPiece(Type type, Color color, Position position) {
+        Piece piece = new Piece(color, type);
+        set(piece, position);
+        if (color == Color.WHITE) {
+            whitePieces.add(piece);
+        } else {
+            blackPieces.add(piece);
         }
-
-        cells[0][0].piece = new Piece(Color.WHITE, Type.ROOK);
-        cells[0][7].piece = new Piece(Color.WHITE, Type.ROOK);
-        cells[7][0].piece = new Piece(Color.BLACK, Type.ROOK);
-        cells[7][7].piece = new Piece(Color.BLACK, Type.ROOK);
-
-        cells[0][1].piece = new Piece(Color.WHITE, Type.KNIGHT);
-        cells[0][6].piece = new Piece(Color.WHITE, Type.KNIGHT);
-        cells[7][1].piece = new Piece(Color.BLACK, Type.KNIGHT);
-        cells[7][6].piece = new Piece(Color.BLACK, Type.KNIGHT);
-
-        cells[0][2].piece = new Piece(Color.WHITE, Type.BISHOP);
-        cells[0][5].piece = new Piece(Color.WHITE, Type.BISHOP);
-        cells[7][2].piece = new Piece(Color.BLACK, Type.BISHOP);
-        cells[7][5].piece = new Piece(Color.BLACK, Type.BISHOP);
-
-        cells[0][3].piece = new Piece(Color.WHITE, Type.QUEEN);
-        cells[7][3].piece = new Piece(Color.BLACK, Type.QUEEN);
-
-        cells[0][4].piece = new Piece(Color.WHITE, Type.KING);
-        cells[7][4].piece = new Piece(Color.BLACK, Type.KING);
     }
 
-    void move(Position from, Position to) {
-        Cell fromCell = get(from);
-        Cell toCell = get(to);
-        toCell.piece = fromCell.piece;
-        fromCell.piece = null;
+    void move(@NonNull Position fromPosition, @NonNull Position toPosition) {
+        Piece pieceFrom = get(fromPosition);
+        if (pieceFrom == null) {
+            throw new IllegalStateException("move piece cant be null");
+        }
+        Piece pieceTo = get(toPosition);
+        set(pieceFrom, toPosition);
+        remove(fromPosition);
     }
 
-    Cell get(Position pos) {
+    Piece get(Position pos) {
         validatePosition(pos);
-        return cells[pos.row - 1][pos.col - 1];
+        return board[pos.row - 1][pos.col - 1];
     }
 
-    void validatePosition(Position pos) {
-        if (pos.row < 0 || pos.row > 7 || pos.col < 0 || pos.col > 7)
-            throw new RuntimeException("Invalid position");
+    void set(@NonNull Piece piece, @NonNull Position pos) {
+        validatePosition(pos);
+        board[pos.row - 1][pos.col - 1] = piece;
+        piece.setPosition(pos);
+    }
+
+    void remove(@NonNull Position pos) {
+        validatePosition(pos);
+        Piece piece = get(pos);
+        if (piece == null) {
+            return;
+        }
+        if (piece.isWhite()) {
+            whitePieces.remove(piece);
+        }
+        if (piece.isBlack()) {
+            blackPieces.remove(piece);
+        }
+        board[pos.row - 1][pos.col - 1] = null;
+    }
+
+    void validatePosition(@NonNull Position pos) {
+        if (pos.row < 1 || pos.row > 8 || pos.col < 1 || pos.col > 8)
+            throw new RuntimeException("Invalid position coordinates out of range: " + pos);
+    }
+
+    public Piece getWhiteKing() {
+        return whitePieces.stream()
+                .filter(p -> p.getType() == Type.KING && p.isWhite())
+                .findAny().orElseThrow(
+                        () -> new IllegalStateException("White king does not exist")
+                );
+    }
+
+    public Piece getBlackKing() {
+        return whitePieces.stream()
+                .filter(p -> p.getType() == Type.KING && p.isWhite())
+                .findAny().orElseThrow(
+                        () -> new IllegalStateException("Black king does not exist")
+                );
     }
 }
