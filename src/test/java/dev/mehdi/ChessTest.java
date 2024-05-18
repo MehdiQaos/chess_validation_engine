@@ -35,13 +35,11 @@ class ChessTest {
 
         Set<PieceMove> expected = Set.of(
                 new PieceMove(d2, Position.of(3, 4)),
-                new PieceMove(d2, Position.of(4, 4)),
-                new PieceMove(d2, Position.of(3, 3)),
-                new PieceMove(d2, Position.of(3, 5))
+                new PieceMove(d2, Position.of(4, 4))
         );
         Set<PieceMove> result = (Set<PieceMove>) method.invoke(chess, d2);
-        assertThat(result.size()).isEqualTo(4);
-        assertThat(result.containsAll(expected)).isTrue();
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result).containsAll(expected);
     }
 
     @Test
@@ -59,12 +57,10 @@ class ChessTest {
 
 
         Set<PieceMove> expected = Set.of(
-                new PieceMove(d3, Position.of(4, 4)),
-                new PieceMove(d3, Position.of(4, 3)),
-                new PieceMove(d3, Position.of(4, 5))
+                new PieceMove(d3, Position.of(4, 4))
         );
         Set<PieceMove> result = (Set<PieceMove>) method.invoke(chess, d3);
-        assertThat(result.size()).isEqualTo(3);
+        assertThat(result.size()).isEqualTo(1);
         assertThat(result).containsAll(expected);
     }
 
@@ -83,17 +79,15 @@ class ChessTest {
 
         Set<PieceMove> expected = Set.of(
                 new PieceMove(d7, Position.of(6, 4)),
-                new PieceMove(d7, Position.of(5, 4)),
-                new PieceMove(d7, Position.of(6, 3)),
-                new PieceMove(d7, Position.of(6, 5))
+                new PieceMove(d7, Position.of(5, 4))
         );
         Set<PieceMove> result = (Set<PieceMove>) method.invoke(chess, d7);
-        assertThat(result.size()).isEqualTo(4);
+        assertThat(result.size()).isEqualTo(2);
         assertThat(result).containsAll(expected);
     }
 
     @Test
-    void test_white_rook_on_d1_moves() throws Exception {
+    void test_white_rook_on_d4_moves() throws Exception {
 //        initialization
         GameState state = GameState.PLAYING;
         Player whitePlayer = new Player(Color.WHITE);

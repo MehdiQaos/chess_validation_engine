@@ -73,7 +73,7 @@ public class Chess {
             PieceMove move = new PieceMove(pawn, pos);
             availableMoves.add(move);
         }
-        if (row == 2 || row == 7) {
+        if (row == 2 && pawn.isWhite() || row == 7 && pawn.isBlack()) {
             pos = Position.of(row + 2 * direction, col);
             Piece piece = board.get(pos);
             if (piece == null) {
@@ -84,7 +84,7 @@ public class Chess {
         if (col < 8) {
             pos = Position.of(row + direction, col + 1);
             Piece nextPiece = board.get(pos);
-            if (nextPiece == null || nextPiece.getColor() != pawn.getColor()) {
+            if (nextPiece != null && nextPiece.getColor() != pawn.getColor()) {
                 PieceMove move = new PieceCapture(pawn, pos, nextPiece);
                 availableMoves.add(move);
             }
@@ -92,7 +92,7 @@ public class Chess {
         if (col > 1) {
             pos = Position.of(row + direction, col - 1);
             Piece nextPiece = board.get(pos);
-            if (nextPiece == null || nextPiece.getColor() != pawn.getColor()) {
+            if (nextPiece != null && nextPiece.getColor() != pawn.getColor()) {
                 PieceMove move = new PieceCapture(pawn, pos, nextPiece);
                 availableMoves.add(move);
             }
