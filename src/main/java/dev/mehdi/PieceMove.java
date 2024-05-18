@@ -28,4 +28,12 @@ public class PieceMove {
     public int hashCode() {
         return Objects.hash(target, piece);
     }
+
+    @Override
+    public String toString() {
+        return "M{" +
+                target +
+                ", " + piece +
+                '}';
+    }
 }

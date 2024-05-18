@@ -132,8 +132,45 @@ public class Chess {
                 }
             }
         }
+        return straightMoves(rook);
+//        return availableMoves;
+    }
+
+    public Set<PieceMove> straightMoves(Piece piece) {
+        int row = piece.getPosition().row;
+        int col = piece.getPosition().col;
+        Color color = piece.getColor();
+        Set<PieceMove> availableMoves = new HashSet<>();
+        List<Piq> dirs = List.of(
+                new Piq(1, 0),
+                new Piq(-1, 0),
+                new Piq(0, 1),
+                new Piq(0, -1)
+        );
+        for (Piq d: dirs) {
+            int i = row + d.di, j = col + d.dj;
+            while (true) {
+                if (i < 1 || i > 8 || j < 1 || j > 8) {
+                    break;
+                }
+                Position pos = Position.of(i, j);
+                Piece newPiece = board.get(pos);
+                if (newPiece == null) {
+                    PieceMove pieceMove = new PieceMove(newPiece, pos);
+                    availableMoves.add(pieceMove);
+                } else if (newPiece.getColor() != color) {
+                    PieceMove pieceMove = new PieceCapture(newPiece, pos, newPiece);
+                    availableMoves.add(pieceMove);
+                    break;
+                } else {
+                    break;
+                }
+                i += d.di; j += d.dj;
+            }
+        }
         return availableMoves;
     }
 
     record Dir(int di, String type){}
+    record Piq(int di, int dj){}
 }

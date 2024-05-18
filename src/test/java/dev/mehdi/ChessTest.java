@@ -40,8 +40,9 @@ class ChessTest {
                 new PieceMove(d2, Position.of(3, 5))
         );
         Set<PieceMove> result = (Set<PieceMove>) method.invoke(chess, d2);
+        System.out.println(result.size());
         assertThat(result.size()).isEqualTo(4);
-        assertThat(result.containsAll(expected)).isTrue();
+        assertThat(result).containsAll(expected);
     }
 
     @Test
