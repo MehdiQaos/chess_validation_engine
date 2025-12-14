@@ -31,9 +31,9 @@ public class PieceMove {
 
     @Override
     public String toString() {
-        return "M{" +
-                target +
-                ", " + piece +
+        return "PieceMove{" +
+                "target=" + target +
+                ", piece=" + piece +
                 '}';
     }
 }

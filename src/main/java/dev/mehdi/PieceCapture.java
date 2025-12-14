@@ -31,10 +31,10 @@ public class PieceCapture extends PieceMove {
 
     @Override
     public String toString() {
-        return "C{" +
-                capturedPiece +
-                ", " + target +
-                ", " + piece +
+        return "PieceCapture{" +
+                "capturedPiece=" + capturedPiece +
+                ", target=" + target +
+                ", piece=" + piece +
                 '}';
     }
 }

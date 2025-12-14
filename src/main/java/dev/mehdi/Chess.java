@@ -5,6 +5,7 @@ import dev.mehdi.piece.Piece;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Chess {
     private Board board;
@@ -12,6 +13,21 @@ public class Chess {
     private Player blackPlayer;
     private Player turn;
     private GameState state;
+    public static final int BOARD_DIM_LENGTH = 8;
+
+    private final List<Dir> STRAIGHT_DIRS = List.of(
+            new Dir(1, 0),
+            new Dir(-1, 0),
+            new Dir(0, 1),
+            new Dir(0, -1)
+    );
+
+    private final List<Dir> DIAGONAL_DIRS = List.of(
+            new Dir(1, 1),
+            new Dir(-1, 1),
+            new Dir(-1, -1),
+            new Dir(1, -1)
+    );
 
     public Chess() {
         whitePlayer = new Player(Color.WHITE);
@@ -73,7 +89,7 @@ public class Chess {
             PieceMove move = new PieceMove(pawn, pos);
             availableMoves.add(move);
         }
-        if (row == 2 || row == 7) {
+        if (row == 2 && pawn.isWhite() || row == 7 && pawn.isBlack()) {
             pos = Position.of(row + 2 * direction, col);
             Piece piece = board.get(pos);
             if (piece == null) {
@@ -84,7 +100,7 @@ public class Chess {
         if (col < 8) {
             pos = Position.of(row + direction, col + 1);
             Piece nextPiece = board.get(pos);
-            if (nextPiece == null || nextPiece.getColor() != pawn.getColor()) {
+            if (nextPiece != null && nextPiece.getColor() != pawn.getColor()) {
                 PieceMove move = new PieceCapture(pawn, pos, nextPiece);
                 availableMoves.add(move);
             }
@@ -92,7 +108,7 @@ public class Chess {
         if (col > 1) {
             pos = Position.of(row + direction, col - 1);
             Piece nextPiece = board.get(pos);
-            if (nextPiece == null || nextPiece.getColor() != pawn.getColor()) {
+            if (nextPiece != null && nextPiece.getColor() != pawn.getColor()) {
                 PieceMove move = new PieceCapture(pawn, pos, nextPiece);
                 availableMoves.add(move);
             }
@@ -104,73 +120,71 @@ public class Chess {
     }
 
     private Set<PieceMove> rookMoves(Piece rook) {
-        int row = rook.getPosition().row;
-        int col = rook.getPosition().col;
-        Color color = rook.getColor();
-        Set<PieceMove> availableMoves = new HashSet<>();
-        List<Dir> dirs = List.of(
-                new Dir(1, "ROW"),
-                new Dir(-1, "ROW"),
-                new Dir(1, "COL"),
-                new Dir(-1, "COL")
-        );
-        for (Dir d: dirs) {
-            for (int i = (d.type.equals("ROW") ? row: col) + d.di; 1 <= i && i <= 8; i += d.di) {
-                int r = d.type.equals("ROW") ? i: row;
-                int c = d.type.equals("ROW") ? col: i;
-                Position pos = Position.of(r, c);
-                Piece piece = board.get(pos);
-                if (piece == null) {
-                    PieceMove pieceMove = new PieceMove(rook, pos);
-                    availableMoves.add(pieceMove);
-                } else if (piece.getColor() != color) {
-                    PieceMove pieceMove = new PieceCapture(rook, pos, piece);
-                    availableMoves.add(pieceMove);
-                    break;
-                } else {
-                    break;
-                }
-            }
-        }
-        return straightMoves(rook);
-//        return availableMoves;
+        return straightMoves(rook, BOARD_DIM_LENGTH - 1);
     }
 
-    public Set<PieceMove> straightMoves(Piece piece) {
+    public Set<PieceMove> bishopMoves(Piece bishop) {
+        return diagonalMoves(bishop, BOARD_DIM_LENGTH - 1);
+    }
+
+    public Set<PieceMove> queenMoves(Piece queen) {
+        return straightAndDiagMoves(queen, BOARD_DIM_LENGTH - 1);
+    }
+
+    public Set<PieceMove> kingMoves(Piece king) {
+        var moves = straightAndDiagMoves(king, 1);
+        Piece otherKing = king.isWhite() ? blackPlayer.king : whitePlayer.king;
+        Set<Position> otherKingMoves = straightAndDiagMoves(otherKing, 1)
+                .stream()
+                .map(pm -> pm.target).collect(Collectors.toSet());
+        return moves.stream()
+                .filter(m -> !otherKingMoves.contains(m.target))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<PieceMove> straightAndDiagMoves(Piece piece, int dirLimit) {
+        var moves = straightMoves(piece, dirLimit);
+        moves.addAll(diagonalMoves(piece, dirLimit));
+        return moves;
+    }
+
+    public Set<PieceMove> straightMoves(Piece piece, int dirLimit) {
+        return dirMoves(piece, STRAIGHT_DIRS, dirLimit);
+    }
+
+    public Set<PieceMove> diagonalMoves(Piece piece, int dirLimit) {
+         return dirMoves(piece, DIAGONAL_DIRS, dirLimit);
+    }
+
+    private Set<PieceMove> dirMoves(Piece piece, List<Dir> dirs, int dirLimit) {
         int row = piece.getPosition().row;
         int col = piece.getPosition().col;
         Color color = piece.getColor();
         Set<PieceMove> availableMoves = new HashSet<>();
-        List<Piq> dirs = List.of(
-                new Piq(1, 0),
-                new Piq(-1, 0),
-                new Piq(0, 1),
-                new Piq(0, -1)
-        );
-        for (Piq d: dirs) {
-            int i = row + d.di, j = col + d.dj;
-            while (true) {
-                if (i < 1 || i > 8 || j < 1 || j > 8) {
+        for (Dir d: dirs) {
+            int r = row + d.di, c = col + d.dj, limit = dirLimit;
+            while (limit > 0) {
+                if (r < 1 || r > 8 || c < 1 || c > 8) {
                     break;
                 }
-                Position pos = Position.of(i, j);
+                Position pos = Position.of(r, c);
                 Piece newPiece = board.get(pos);
                 if (newPiece == null) {
-                    PieceMove pieceMove = new PieceMove(newPiece, pos);
+                    PieceMove pieceMove = new PieceMove(piece, pos);
                     availableMoves.add(pieceMove);
                 } else if (newPiece.getColor() != color) {
-                    PieceMove pieceMove = new PieceCapture(newPiece, pos, newPiece);
+                    PieceMove pieceMove = new PieceCapture(piece, pos, newPiece);
                     availableMoves.add(pieceMove);
                     break;
                 } else {
                     break;
                 }
-                i += d.di; j += d.dj;
+                r += d.di; c += d.dj;
+                limit--;
             }
         }
         return availableMoves;
     }
 
-    record Dir(int di, String type){}
-    record Piq(int di, int dj){}
+    record Dir(int di, int dj){}
 }

@@ -45,6 +45,10 @@ public class Piece {
                 '}';
     }
 
+    public static Piece pawn(Color color, int row, int col) {
+        return new Piece(Color.WHITE, Type.PAWN, Position.of(row, col));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
